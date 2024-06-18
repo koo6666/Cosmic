@@ -675,18 +675,18 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
 
         // Find the base damage to base futher calculations on.
         // Several skills have their own formula in this section.
-        long calcDmgMax;
+        long baseDmg;
 
         if (magic && ret.skill != 0) {   // thanks onechord for noticing a few false positives stemming from maxdmg as 0
-            calcDmgMax = (long) (Math.ceil((chr.getTotalMagic() * Math.ceil(chr.getTotalMagic() / 1000.0) + chr.getTotalMagic()) / 30.0) + Math.ceil(chr.getTotalInt() / 200.0));
+            baseDmg = (long) (Math.ceil((chr.getTotalMagic() * Math.ceil(chr.getTotalMagic() / 1000.0) + chr.getTotalMagic()) / 30.0) + Math.ceil(chr.getTotalInt() / 200.0));
         } else if (ret.skill == 4001344 || ret.skill == NightWalker.LUCKY_SEVEN || ret.skill == NightLord.TRIPLE_THROW) {
-            calcDmgMax = (long) ((chr.getTotalLuk() * 5) * Math.ceil(chr.getTotalWatk() / 100.0));
+            baseDmg = (long) ((chr.getTotalLuk() * 5) * Math.ceil(chr.getTotalWatk() / 100.0));
         } else if (ret.skill == DragonKnight.DRAGON_ROAR) {
-            calcDmgMax = (long) ((chr.getTotalStr() * 4 + chr.getTotalDex()) * Math.ceil(chr.getTotalWatk() / 100.0));
+            baseDmg = (long) ((chr.getTotalStr() * 4 + chr.getTotalDex()) * Math.ceil(chr.getTotalWatk() / 100.0));
         } else if (ret.skill == NightLord.VENOMOUS_STAR || ret.skill == Shadower.VENOMOUS_STAB) {
-            calcDmgMax = (long) (Math.ceil((18.5 * (chr.getTotalStr() + chr.getTotalLuk()) + chr.getTotalDex() * 2) / 100.0) * chr.calculateMaxBaseDamage(chr.getTotalWatk()));
+            baseDmg = (long) (Math.ceil((18.5 * (chr.getTotalStr() + chr.getTotalLuk()) + chr.getTotalDex() * 2) / 100.0) * chr.calculateMaxBaseDamage(chr.getTotalWatk()));
         } else {
-            calcDmgMax = chr.calculateMaxBaseDamage(chr.getTotalWatk());
+            baseDmg = chr.calculateMaxBaseDamage(chr.getTotalWatk());
         }
 
         if (ret.skill != 0) {
@@ -698,40 +698,40 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
                 if (chr.getJob() == Job.IL_ARCHMAGE || chr.getJob() == Job.IL_MAGE) {
                     int skillLvl = chr.getSkillLevel(ILMage.ELEMENT_AMPLIFICATION);
                     if (skillLvl > 0) {
-                        calcDmgMax = calcDmgMax * SkillFactory.getSkill(ILMage.ELEMENT_AMPLIFICATION).getEffect(skillLvl).getY() / 100;
+                        baseDmg = baseDmg * SkillFactory.getSkill(ILMage.ELEMENT_AMPLIFICATION).getEffect(skillLvl).getY() / 100;
                     }
                 } else if (chr.getJob() == Job.FP_ARCHMAGE || chr.getJob() == Job.FP_MAGE) {
                     int skillLvl = chr.getSkillLevel(FPMage.ELEMENT_AMPLIFICATION);
                     if (skillLvl > 0) {
-                        calcDmgMax = calcDmgMax * SkillFactory.getSkill(FPMage.ELEMENT_AMPLIFICATION).getEffect(skillLvl).getY() / 100;
+                        baseDmg = baseDmg * SkillFactory.getSkill(FPMage.ELEMENT_AMPLIFICATION).getEffect(skillLvl).getY() / 100;
                     }
                 } else if (chr.getJob() == Job.BLAZEWIZARD3 || chr.getJob() == Job.BLAZEWIZARD4) {
                     int skillLvl = chr.getSkillLevel(BlazeWizard.ELEMENT_AMPLIFICATION);
                     if (skillLvl > 0) {
-                        calcDmgMax = calcDmgMax * SkillFactory.getSkill(BlazeWizard.ELEMENT_AMPLIFICATION).getEffect(skillLvl).getY() / 100;
+                        baseDmg = baseDmg * SkillFactory.getSkill(BlazeWizard.ELEMENT_AMPLIFICATION).getEffect(skillLvl).getY() / 100;
                     }
                 } else if (chr.getJob() == Job.EVAN7 || chr.getJob() == Job.EVAN8 || chr.getJob() == Job.EVAN9 || chr.getJob() == Job.EVAN10) {
                     int skillLvl = chr.getSkillLevel(Evan.MAGIC_AMPLIFICATION);
                     if (skillLvl > 0) {
-                        calcDmgMax = calcDmgMax * SkillFactory.getSkill(Evan.MAGIC_AMPLIFICATION).getEffect(skillLvl).getY() / 100;
+                        baseDmg = baseDmg * SkillFactory.getSkill(Evan.MAGIC_AMPLIFICATION).getEffect(skillLvl).getY() / 100;
                     }
                 }
 
-                calcDmgMax *= effect.getMatk();
+                baseDmg *= effect.getMatk();
                 if (ret.skill == Cleric.HEAL) {
                     // This formula is still a bit wonky, but it is fairly accurate.
-                    calcDmgMax = (int) Math.round((chr.getTotalInt() * 4.8 + chr.getTotalLuk() * 4) * chr.getTotalMagic() / 1000);
-                    calcDmgMax = calcDmgMax * effect.getHp() / 100;
+                    baseDmg = (int) Math.round((chr.getTotalInt() * 4.8 + chr.getTotalLuk() * 4) * chr.getTotalMagic() / 1000);
+                    baseDmg = baseDmg * effect.getHp() / 100;
 
                     ret.speed = 7;
                 }
             } else if (ret.skill == Hermit.SHADOW_MESO) {
                 // Shadow Meso also has its own formula
-                calcDmgMax = effect.getMoneyCon() * 10;
-                calcDmgMax = (int) Math.floor(calcDmgMax * 1.5);
+                baseDmg = effect.getMoneyCon() * 10;
+                baseDmg = (int) Math.floor(baseDmg * 1.5);
             } else {
                 // Normal damage formula for skills
-                calcDmgMax = calcDmgMax * effect.getDamage() / 100;
+                baseDmg = baseDmg * effect.getDamage() / 100;
             }
         }
 
@@ -743,7 +743,7 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
             if (comboBuff > 6) {
                 // Advanced Combo
                 StatEffect ceffect = SkillFactory.getSkill(advcomboid).getEffect(chr.getSkillLevel(advcomboid));
-                calcDmgMax = (long) Math.floor(calcDmgMax * (ceffect.getDamage() + 50) / 100 + 0.20 + (comboBuff - 5) * 0.04);
+                baseDmg = (long) Math.floor(baseDmg * (ceffect.getDamage() + 50) / 100 + 0.20 + (comboBuff - 5) * 0.04);
             } else {
                 // Normal Combo
                 int skillLv = chr.getSkillLevel(oid);
@@ -753,7 +753,7 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
 
                 if (skillLv > 0) {
                     StatEffect ceffect = SkillFactory.getSkill(oid).getEffect(skillLv);
-                    calcDmgMax = (long) Math.floor(calcDmgMax * (ceffect.getDamage() + 50) / 100 + Math.floor((comboBuff - 1) * (skillLv / 6)) / 100);
+                    baseDmg = (long) Math.floor(baseDmg * (ceffect.getDamage() + 50) / 100 + Math.floor((comboBuff - 1) * (skillLv / 6)) / 100);
                 }
             }
 
@@ -761,13 +761,13 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
                 // Finisher skills do more damage based on how many orbs the player has.
                 int orbs = comboBuff - 1;
                 if (orbs == 2) {
-                    calcDmgMax *= 1.2;
+                    baseDmg *= 1.2;
                 } else if (orbs == 3) {
-                    calcDmgMax *= 1.54;
+                    baseDmg *= 1.54;
                 } else if (orbs == 4) {
-                    calcDmgMax *= 2;
+                    baseDmg *= 2;
                 } else if (orbs >= 5) {
-                    calcDmgMax *= 2.5;
+                    baseDmg *= 2.5;
                 }
             }
         }
@@ -775,7 +775,7 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
         if (chr.getEnergyBar() == 15000) {
             int energycharge = chr.isCygnus() ? ThunderBreaker.ENERGY_CHARGE : Marauder.ENERGY_CHARGE;
             StatEffect ceffect = SkillFactory.getSkill(energycharge).getEffect(chr.getSkillLevel(energycharge));
-            calcDmgMax *= (100 + ceffect.getDamage()) / 100;
+            baseDmg *= (100 + ceffect.getDamage()) / 100;
         }
 
         int bonusDmgBuff = 100;
@@ -786,11 +786,11 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
 
         if (bonusDmgBuff != 100) {
             float dmgBuff = bonusDmgBuff / 100.0f;
-            calcDmgMax = (long) Math.ceil(calcDmgMax * dmgBuff);
+            baseDmg = (long) Math.ceil(baseDmg * dmgBuff);
         }
 
         if (chr.getMapId() >= MapId.ARAN_TUTORIAL_START && chr.getMapId() <= MapId.ARAN_TUTORIAL_MAX) {
-            calcDmgMax += 80000; // Aran Tutorial.
+            baseDmg += 80000; // Aran Tutorial.
         }
 
         boolean canCrit = chr.getJob().isA((Job.BOWMAN)) || chr.getJob().isA(Job.THIEF) || chr.getJob().isA(Job.NIGHTWALKER1) || chr.getJob().isA(Job.WINDARCHER1) || chr.getJob() == Job.ARAN3 || chr.getJob() == Job.ARAN4 || chr.getJob() == Job.MARAUDER || chr.getJob() == Job.BUCCANEER;
@@ -800,7 +800,7 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
             // and calc it in.
 
             canCrit = true;
-            calcDmgMax *= 1.4;
+            baseDmg *= 1.4;
         }
 
         boolean shadowPartner = chr.getBuffEffect(BuffStat.SHADOWPARTNER) != null;
@@ -808,10 +808,13 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
         if (ret.skill != 0) {
             int fixed = ret.getAttackEffect(chr, SkillFactory.getSkill(ret.skill)).getFixDamage();
             if (fixed > 0) {
-                calcDmgMax = fixed;
+                baseDmg = fixed;
             }
         }
+
+        long calcDmgMax = 0L;
         for (int i = 0; i < ret.numAttacked; i++) {
+            calcDmgMax = baseDmg;
             int oid = p.readInt();
             p.skip(14);
             List<Integer> allDamageNumbers = new ArrayList<>();
